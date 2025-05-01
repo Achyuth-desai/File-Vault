@@ -10,8 +10,15 @@ export interface FileMetadata {
 }
 
 export interface FileUploadResponse {
-  id: string;
-  message: string;
+  id?: string;
+  message?: string;
+  error?: string;
+  existing_file?: {
+    id: string;
+    name: string;
+    size: number;
+    uploaded_at: string;
+  };
 }
 
 export interface FileListResponse {
@@ -28,4 +35,10 @@ export interface FileSearchResponse {
 export interface ApiError {
   message: string;
   status: number;
+  existingFile?: {
+    id: string;
+    name: string;
+    size: number;
+    uploaded_at: string;
+  };
 } 

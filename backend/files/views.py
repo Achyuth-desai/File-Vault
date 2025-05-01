@@ -27,8 +27,36 @@ class FileViewSet(viewsets.ModelViewSet):
         return context
 
     def list(self, request, *args, **kwargs):
-        logger.info(f"Listing files")
+        logger.info(f"Listing files with params: {request.query_params}")
         queryset = self.get_queryset()
+        
+        # Apply filters if provided
+        file_type = request.query_params.get('file_type')
+        logger.info(f"File type filter: {file_type}")
+        if file_type:
+            # Check if it's a MIME type (contains '/')
+            if '/' in file_type:
+                queryset = queryset.filter(file_type=file_type)
+            else:
+                # Filter by file extension
+                queryset = queryset.filter(original_filename__iendswith=file_type)
+            
+        min_size = request.query_params.get('min_size')
+        if min_size:
+            queryset = queryset.filter(size__gte=int(min_size))
+            
+        max_size = request.query_params.get('max_size')
+        if max_size:
+            queryset = queryset.filter(size__lte=int(max_size))
+            
+        start_date = request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(uploaded_at__gte=start_date)
+            
+        end_date = request.query_params.get('end_date')
+        if end_date:
+            queryset = queryset.filter(uploaded_at__lte=end_date)
+            
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             'files': serializer.data,
@@ -228,8 +256,38 @@ class FileViewSet(viewsets.ModelViewSet):
 
         logger.info(f"Searching files with query: {query}")
         
-        # Use case-insensitive contains search on original_filename
-        queryset = File.objects.filter(original_filename__icontains=query)
+        # Start with the base queryset
+        queryset = self.get_queryset()
+        
+        # Apply search query
+        queryset = queryset.filter(original_filename__icontains=query)
+        
+        # Apply the same filters as the list endpoint
+        file_type = request.query_params.get('file_type')
+        logger.info(f"File type filter in search: {file_type}")
+        if file_type:
+            # Check if it's a MIME type (contains '/')
+            if '/' in file_type:
+                queryset = queryset.filter(file_type=file_type)
+            else:
+                # Filter by file extension
+                queryset = queryset.filter(original_filename__iendswith=file_type)
+            
+        min_size = request.query_params.get('min_size')
+        if min_size:
+            queryset = queryset.filter(size__gte=int(min_size))
+            
+        max_size = request.query_params.get('max_size')
+        if max_size:
+            queryset = queryset.filter(size__lte=int(max_size))
+            
+        start_date = request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(uploaded_at__gte=start_date)
+            
+        end_date = request.query_params.get('end_date')
+        if end_date:
+            queryset = queryset.filter(uploaded_at__lte=end_date)
         
         # Order by most recent first
         queryset = queryset.order_by('-uploaded_at')

@@ -41,8 +41,10 @@ export const uploadFile = async (file: globalThis.File): Promise<FileUploadRespo
   return fileService.uploadFile(file);
 };
 
-export const getFiles = async (): Promise<FileListResponse> => {
-  return fileService.listFiles();
+export const getFiles = async (params?: URLSearchParams): Promise<FileListResponse> => {
+  const url = '/files/';
+  const response = await fileService.listFiles(url, params);
+  return response;
 };
 
 export const getFileDetails = async (id: string): Promise<FileMetadata> => {
@@ -53,6 +55,9 @@ export const deleteFile = async (id: string): Promise<void> => {
   return fileService.deleteFile(id);
 };
 
-export const searchFiles = async (query: string): Promise<FileSearchResponse> => {
-  return fileService.searchFiles(query);
+export const searchFiles = async (query: string, params?: URLSearchParams): Promise<FileSearchResponse> => {
+  const searchParams = new URLSearchParams(params);
+  searchParams.append('q', query);
+  const url = '/files/search/';
+  return fileService.searchFiles(url, searchParams);
 }; 

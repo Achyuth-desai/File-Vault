@@ -23,23 +23,69 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 export const useFiles = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filters, setFilters] = useState({
+    fileType: '',
+    minSize: '',
+    maxSize: '',
+    startDate: '',
+    endDate: '',
+  });
+
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedFilters = useDebounce(filters, 300);
 
   // Query for listing all files or searching files
   const { data: files, isLoading, error, refetch } = useQuery<FileListResponse | FileSearchResponse, ApiError>({
-    queryKey: ['files', 'list', debouncedSearchQuery],
-    queryFn: () => debouncedSearchQuery ? searchFiles(debouncedSearchQuery) : getFiles(),
+    queryKey: ['files', 'list', debouncedSearchQuery, debouncedFilters],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) {
+        params.append('q', debouncedSearchQuery);
+      }
+      if (debouncedFilters.fileType) {
+        console.log('Setting file type filter:', debouncedFilters.fileType);
+        params.append('file_type', debouncedFilters.fileType);
+      }
+      if (debouncedFilters.minSize) {
+        params.append('min_size', (parseInt(debouncedFilters.minSize) * 1024 * 1024).toString());
+      }
+      if (debouncedFilters.maxSize) {
+        params.append('max_size', (parseInt(debouncedFilters.maxSize) * 1024 * 1024).toString());
+      }
+      if (debouncedFilters.startDate) {
+        params.append('start_date', debouncedFilters.startDate);
+      }
+      if (debouncedFilters.endDate) {
+        params.append('end_date', debouncedFilters.endDate);
+      }
+      console.log('Query params:', params.toString());
+      return debouncedSearchQuery ? 
+        searchFiles(debouncedSearchQuery, params) : 
+        getFiles(params);
+    },
     retry: 1,
     staleTime: 0,
-    // Don't show loading state when refetching
     notifyOnChangeProps: ['data', 'error'],
   });
 
   // Mutation for uploading files
   const uploadMutation = useMutation<FileUploadResponse, ApiError, globalThis.File>({
     mutationFn: uploadFile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['files', 'list'] });
+    onSuccess: async (response) => {
+      if (response.error === 'File already exists' && response.existing_file) {
+        // If it's a duplicate file, don't update the list
+        return;
+      }
+      
+      // Invalidate and refetch with current filters
+      await queryClient.invalidateQueries({
+        queryKey: ['files', 'list', debouncedSearchQuery, debouncedFilters],
+        refetchType: 'active',
+        exact: true
+      });
+      
+      // Force a refetch with current filters
+      await refetch();
     },
   });
 
@@ -74,7 +120,6 @@ export const useFiles = () => {
     onSuccess: () => {
       // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['files', 'list'] });
-      queryClient.invalidateQueries({ queryKey: ['files', 'list', debouncedSearchQuery] });
     },
   });
 
@@ -103,6 +148,13 @@ export const useFiles = () => {
     // Search operations
     searchQuery,
     setSearchQuery,
+
+    // Filter operations
+    filters,
+    setFilters: (newFilters: typeof filters) => {
+      setFilters(newFilters);
+      // Don't invalidate the query here, let the debounced effect handle it
+    },
 
     // Upload operations
     uploadFile: uploadMutation.mutate,

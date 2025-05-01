@@ -11,9 +11,13 @@ const api = axios.create({
 });
 
 export const fileService = {
-  listFiles: async (): Promise<FileListResponse> => {
+  listFiles: async (url: string = '/files/', params?: URLSearchParams): Promise<FileListResponse> => {
     try {
-      const response = await api.get('/files/');
+      console.log('List files params:', params?.toString());
+      // Convert URLSearchParams to object for axios
+      const paramsObj = params ? Object.fromEntries(params.entries()) : undefined;
+      console.log('Params object:', paramsObj);
+      const response = await api.get(url, { params: paramsObj });
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -84,11 +88,12 @@ export const fileService = {
     }
   },
 
-  searchFiles: async (query: string): Promise<FileSearchResponse> => {
+  searchFiles: async (url: string, params?: URLSearchParams): Promise<FileSearchResponse> => {
     try {
-      const response = await api.get('/files/search/', {
-        params: { q: query }
-      });
+      console.log('Search files params:', params?.toString());
+      const paramsObj = params ? Object.fromEntries(params.entries()) : undefined;
+      console.log('Search params object:', paramsObj);
+      const response = await api.get(url, { params: paramsObj });
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -99,12 +104,13 @@ export const fileService = {
 const handleApiError = (error: any): ApiError => {
   if (axios.isAxiosError(error)) {
     return {
-      message: error.response?.data?.message || 'An error occurred',
+      message: error.response?.data?.error || error.message || 'An error occurred',
       status: error.response?.status || 500,
+      existingFile: error.response?.data?.existing_file
     };
   }
   return {
     message: 'An unexpected error occurred',
-    status: 500,
+    status: 500
   };
 }; 
