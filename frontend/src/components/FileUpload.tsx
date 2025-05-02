@@ -22,19 +22,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       const response = await uploadFile(file);
       // Refresh the file list after successful upload
       await refetch();
-      setMessage({ type: 'success', text: 'File uploaded successfully' });
+      setMessage({ 
+        type: 'success', 
+        text: response.is_reference 
+          ? `File reference created successfully (original: ${response.original_file?.name})`
+          : 'File uploaded successfully' 
+      });
       onUploadSuccess(response);
     } catch (error: unknown) {
-      if (isApiError(error) && error.status === 409) {
-        const existingFile = error.existingFile;
-        const message = existingFile?.name === file.name
-          ? `A file with the name "${file.name}" already exists (uploaded on ${new Date(existingFile.uploaded_at || '').toLocaleString()})`
-          : `This file has the same content as "${existingFile?.name}" (uploaded on ${new Date(existingFile?.uploaded_at || '').toLocaleString()})`;
-        setMessage({ 
-          type: 'error', 
-          text: message
-        });
-      } else if (isApiError(error)) {
+      if (isApiError(error)) {
         setMessage({ type: 'error', text: error.message || 'Failed to upload file' });
       } else {
         setMessage({ type: 'error', text: 'An unexpected error occurred' });

@@ -7,13 +7,17 @@ export interface FileMetadata {
   file: string;
   file_hash: string;
   file_url: string;
+  reference_file?: string;
+  is_reference: boolean;
+  original_file_url?: string;
 }
 
 export interface FileUploadResponse {
   id?: string;
   message?: string;
   error?: string;
-  existing_file?: {
+  is_reference?: boolean;
+  original_file?: {
     id: string;
     name: string;
     size: number;

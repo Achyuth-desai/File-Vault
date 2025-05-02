@@ -77,8 +77,8 @@ export const useFiles = () => {
   const uploadMutation = useMutation<FileUploadResponse, ApiError, globalThis.File>({
     mutationFn: uploadFile,
     onSuccess: async (response) => {
-      if (response.error === 'File already exists' && response.existing_file) {
-        // If it's a duplicate file, don't update the list
+      if (response.is_reference) {
+        // If it's a reference to an existing file, don't update the list
         return;
       }
       

@@ -10,6 +10,7 @@ from .documents import FileDocument
 from .serializers import FileSerializer
 import hashlib
 import logging
+from .models import StoredFile
 
 logger = logging.getLogger('files')
 
@@ -137,40 +138,29 @@ class FileViewSet(viewsets.ModelViewSet):
         
         try:
             logger.info(f"Processing file upload: {file_obj.name}")
-            # Calculate file hash
+            # Calculate hash using the original file object
             file_hash = calculate_file_hash(file_obj)
+            file_obj.seek(0)  # Reset file pointer after hash calculation
             
-            # Check for duplicate file by hash or filename
-            existing_file = File.objects.filter(
-                file_hash=file_hash
-            ).first() or File.objects.filter(
-                original_filename=file_obj.name
-            ).first()
-
-            if existing_file:
-                logger.warning(f"Duplicate file detected: {file_obj.name} (hash: {file_hash})")
-                return Response({
-                    'error': 'File already exists',
-                    'existing_file': {
-                        'id': str(existing_file.id),
-                        'name': existing_file.original_filename,
-                        'size': existing_file.size,
-                        'uploaded_at': existing_file.uploaded_at
-                    }
-                }, status=status.HTTP_409_CONFLICT)
+            # Check for existing stored file
+            stored_file = StoredFile.objects.filter(file_hash=file_hash).first()
+            if stored_file:
+                logger.info(f"Duplicate file detected: {file_obj.name} (hash: {file_hash}) - Creating reference")
+                # Reference count will be incremented in File.save()
+            else:
+                logger.info(f"New file detected: {file_obj.name} (hash: {file_hash})")
+                # Create new stored file
+                stored_file = StoredFile.objects.create(
+                    file=file_obj,
+                    file_hash=file_hash
+                )
             
-            # Get file type from content type or extension
-            content_type = file_obj.content_type
-            if not content_type or content_type == 'application/octet-stream':
-                ext = file_obj.name.split('.')[-1].lower()
-                content_type = get_mime_type_from_extension(f'.{ext}')
-            
+            # Create file record
             data = {
-                'file': file_obj,
+                'stored_file': stored_file.id,  # Pass the ID instead of the instance
                 'original_filename': file_obj.name,
-                'file_type': content_type,
-                'size': file_obj.size,
-                'file_hash': file_hash
+                'file_type': file_obj.content_type,
+                'size': file_obj.size
             }
             
             serializer = self.get_serializer(data=data)
@@ -180,8 +170,10 @@ class FileViewSet(viewsets.ModelViewSet):
             logger.info(f"File uploaded successfully: {file_obj.name} (id: {serializer.data['id']})")
             return Response({
                 'id': serializer.data['id'],
-                'message': 'File uploaded successfully'
+                'message': 'File uploaded successfully',
+                'is_reference': not stored_file.reference_count == 1
             }, status=status.HTTP_201_CREATED)
+            
         except Exception as e:
             logger.error(f"Error uploading file {file_obj.name}: {str(e)}")
             return Response({
@@ -191,9 +183,8 @@ class FileViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         logger.info(f"Deleting file: {instance.original_filename} (id: {instance.id})")
-        # Delete the file from storage
-        instance.file.delete(save=False)
-        # Delete the database record
+        
+        # Delete the database record (this will handle reference counting)
         self.perform_destroy(instance)
         logger.info(f"File deleted successfully: {instance.original_filename}")
         return Response(status=status.HTTP_204_NO_CONTENT)

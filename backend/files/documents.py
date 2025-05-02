@@ -4,15 +4,10 @@ from .models import File
 
 @registry.register_document
 class FileDocument(Document):
-    id = fields.KeywordField()
-    original_filename = fields.TextField(
-        fields={
-            'raw': fields.KeywordField(),
-            'suggest': fields.CompletionField()
-        }
-    )
-    file_type = fields.KeywordField()
-    size = fields.LongField()
+    original_filename = fields.TextField()
+    file_type = fields.TextField()
+    size = fields.IntegerField()
+    file_hash = fields.TextField()
     uploaded_at = fields.DateField()
 
     class Index:
@@ -24,18 +19,9 @@ class FileDocument(Document):
 
     class Django:
         model = File
-        fields = [
-            'file_hash'
-        ]
-
-    def prepare_original_filename(self, instance):
-        return instance.original_filename
-
-    def prepare_file_type(self, instance):
-        return instance.file_type
 
     def prepare_size(self, instance):
-        return instance.size
+        return instance.stored_file.file.size
 
-    def prepare_uploaded_at(self, instance):
-        return instance.uploaded_at 
+    def prepare_file_hash(self, instance):
+        return instance.stored_file.file_hash 

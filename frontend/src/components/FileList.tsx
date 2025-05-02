@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFiles } from '../hooks/useFiles';
 import { FileFilters } from './FileFilters';
 import { format } from 'date-fns';
 import { FileMetadata } from '../types/file';
+import { FileDetails } from './FileDetails';
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
@@ -32,6 +33,8 @@ export const FileList: React.FC = () => {
     isDeleting,
     deleteError,
   } = useFiles();
+
+  const [selectedFile, setSelectedFile] = useState<FileMetadata | null>(null);
 
   const handleDelete = async (fileId: string) => {
     try {
@@ -100,13 +103,36 @@ export const FileList: React.FC = () => {
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{file.original_filename}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {file.original_filename}
+                          {file.is_reference && (
+                            <span className="ml-2 text-xs text-gray-500">
+                              (Reference to original file)
+                            </span>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-500">
                           {formatFileSize(file.size)} • {formatDate(file.uploaded_at)}
+                          {file.is_reference && file.original_file_url && (
+                            <a 
+                              href={file.original_file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                            >
+                              View original
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="ml-4 flex-shrink-0">
+                    <div className="ml-4 flex-shrink-0 flex space-x-2">
+                      <button
+                        onClick={() => setSelectedFile(file)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        View Details
+                      </button>
                       <button
                         onClick={() => handleDelete(file.id)}
                         disabled={isDeleting}
@@ -122,6 +148,12 @@ export const FileList: React.FC = () => {
           </ul>
         </div>
       </div>
+      {selectedFile && (
+        <FileDetails
+          file={selectedFile}
+          onClose={() => setSelectedFile(null)}
+        />
+      )}
     </div>
   );
 }; 
