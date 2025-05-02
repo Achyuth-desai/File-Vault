@@ -1,8 +1,12 @@
 from django.shortcuts import render
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, pagination
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django.core.cache import cache
+from django.conf import settings
+from elasticsearch_dsl import Q
 from .models import File
+from .documents import FileDocument
 from .serializers import FileSerializer
 import hashlib
 import logging
@@ -67,10 +71,17 @@ def get_mime_type_from_extension(extension):
             return mime_type
     return 'application/octet-stream'
 
+# Configure pagination
+class FilePagination(pagination.PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 # Create your views here.
 class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()
     serializer_class = FileSerializer
+    pagination_class = FilePagination
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -190,7 +201,7 @@ class FileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def search(self, request):
         """
-        Search for files by filename using case-insensitive partial matching.
+        Search for files using Elasticsearch with advanced search capabilities.
         """
         query = request.query_params.get('q', '').strip()
         if not query:
@@ -198,48 +209,75 @@ class FileViewSet(viewsets.ModelViewSet):
                 'error': 'Search query parameter "q" is required'
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Generate cache key based on query and filters
+        file_type = request.query_params.get('file_type', '')
+        page = request.query_params.get('page', 1)
+        page_size = request.query_params.get('page_size', self.pagination_class.page_size)
+        cache_key = f'search_{query}_{file_type}_{page}_{page_size}'
+        
+        # Try to get cached results
+        cached_results = cache.get(cache_key)
+        if cached_results:
+            logger.info(f"Returning cached search results for query: {query}")
+            return Response(cached_results)
+
         logger.info(f"Searching files with query: {query}")
         
-        # Start with the base queryset
-        queryset = self.get_queryset()
+        # Build Elasticsearch query
+        search = FileDocument.search()
         
-        # Apply search query
-        queryset = queryset.filter(original_filename__icontains=query)
+        # Add search query with prefix matching
+        search = search.query(
+            Q('bool',
+              should=[
+                  Q('prefix', original_filename=query),
+                  Q('match', original_filename={'query': query, 'fuzziness': 'AUTO'})
+              ],
+              minimum_should_match=1)
+        )
         
-        # Apply the same filters as the list endpoint
-        file_type = request.query_params.get('file_type')
-        logger.info(f"File type filter in search: {file_type}")
+        # Apply file type filter if provided
         if file_type:
-            # Check if it's a MIME type (contains '/')
             if '/' in file_type:
-                queryset = queryset.filter(file_type=file_type)
+                search = search.filter('term', file_type=file_type)
             else:
-                # Filter by file extension
                 mime_type = get_mime_type_from_extension(f'.{file_type}')
-                queryset = queryset.filter(file_type=mime_type)
-            
-        min_size = request.query_params.get('min_size')
-        if min_size:
-            queryset = queryset.filter(size__gte=int(min_size))
-            
-        max_size = request.query_params.get('max_size')
-        if max_size:
-            queryset = queryset.filter(size__lte=int(max_size))
-            
-        start_date = request.query_params.get('start_date')
-        if start_date:
-            queryset = queryset.filter(uploaded_at__gte=start_date)
-            
-        end_date = request.query_params.get('end_date')
-        if end_date:
-            queryset = queryset.filter(uploaded_at__lte=end_date)
+                search = search.filter('term', file_type=mime_type)
+
+        # Apply pagination
+        start = (int(page) - 1) * int(page_size)
+        search = search[start:start + int(page_size)]
         
-        # Order by most recent first
-        queryset = queryset.order_by('-uploaded_at')
+        # Execute search
+        response = search.execute()
+        logger.info(f"Elasticsearch query: {search.to_dict()}")
+        logger.info(f"Elasticsearch response: {response.to_dict()}")
         
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({
+        # Get total count
+        total = response.hits.total.value
+        logger.info(f"Total hits: {total}")
+        
+        # Get file IDs from search results
+        file_ids = [hit.meta.id for hit in response]
+        logger.info(f"Found file IDs: {file_ids}")
+        
+        # Get actual file objects
+        files = File.objects.filter(id__in=file_ids)
+        logger.info(f"Found files: {files}")
+        
+        # Serialize results
+        serializer = self.get_serializer(files, many=True)
+        
+        # Prepare response data
+        response_data = {
             'files': serializer.data,
-            'total': queryset.count(),
-            'query': query
-        })
+            'total': total,
+            'query': query,
+            'page': int(page),
+            'page_size': int(page_size)
+        }
+        
+        # Cache the results for 5 minutes
+        cache.set(cache_key, response_data, timeout=300)
+        
+        return Response(response_data)

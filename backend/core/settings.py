@@ -40,6 +40,8 @@ INSTALLED_APPS = [
   "rest_framework",
   "corsheaders",
   "files",
+  "django_elasticsearch_dsl",
+  "django_elasticsearch_dsl_drf",
 ]
 
 MIDDLEWARE = [
@@ -185,5 +187,14 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+    },
+}
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSN = os.environ.get('ELASTICSEARCH_DSN', 'http://localhost:9200')
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': ELASTICSEARCH_DSN
     },
 }

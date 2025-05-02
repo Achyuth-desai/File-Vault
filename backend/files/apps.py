@@ -12,6 +12,7 @@ class FilesConfig(AppConfig):
     # Only register cleanup if we're not in a test environment
     if not os.environ.get('DJANGO_TEST'):
       atexit.register(self.cleanup_files)
+    import files.signals  # Import signals
 
   def cleanup_files(self):
     """Clean up uploaded files when the application shuts down"""
