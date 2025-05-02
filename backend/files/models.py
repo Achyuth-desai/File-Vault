@@ -26,6 +26,7 @@ class File(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        db_table = 'files_metadata'  # Custom table name
         ordering = ['-uploaded_at']
     
     def __str__(self):

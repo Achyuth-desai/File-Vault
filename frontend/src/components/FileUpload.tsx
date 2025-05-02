@@ -66,7 +66,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       'application/x-7z-compressed': ['.7z'],
       'application/x-tar': ['.tar'],
       'application/gzip': ['.gz'],
-      'application/xml': ['.xml'],
+      'application/xml': ['.xml', '.xsd', '.xsl', '.xslt', '.dtd'],
       'text/html': ['.html'],
       'text/css': ['.css'],
       'application/javascript': ['.js'],

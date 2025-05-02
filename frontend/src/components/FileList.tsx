@@ -67,7 +67,7 @@ export const FileList: React.FC = () => {
           </div>
         </div>
         <div className="border-t border-gray-200">
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {isLoading ? (
               <li className="px-4 py-4">
                 <div className="animate-pulse flex space-x-4">

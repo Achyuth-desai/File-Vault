@@ -44,7 +44,12 @@ export const useFiles = () => {
       }
       if (debouncedFilters.fileType) {
         console.log('Setting file type filter:', debouncedFilters.fileType);
-        params.append('file_type', debouncedFilters.fileType);
+        // For XML files, ensure we're using the correct MIME type
+        if (debouncedFilters.fileType === 'application/xml') {
+          params.append('file_type', 'application/xml');
+        } else {
+          params.append('file_type', debouncedFilters.fileType);
+        }
       }
       if (debouncedFilters.minSize) {
         params.append('min_size', (parseInt(debouncedFilters.minSize) * 1024 * 1024).toString());

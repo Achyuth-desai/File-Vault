@@ -9,12 +9,63 @@ import logging
 
 logger = logging.getLogger('files')
 
+# List of known MIME types and their extensions
+KNOWN_FILE_TYPES = {
+    'application/pdf': ['.pdf'],
+    'image/png': ['.png'],
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/gif': ['.gif'],
+    'text/plain': ['.txt'],
+    'text/x-python': ['.py'],
+    'application/json': ['.json'],
+    'text/csv': ['.csv'],
+    'text/markdown': ['.md'],
+    'application/parquet': ['.parquet'],
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    'application/vnd.ms-excel': ['.xls'],
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    'application/msword': ['.doc'],
+    'application/vnd.ms-powerpoint': ['.ppt'],
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+    'application/zip': ['.zip'],
+    'application/x-rar-compressed': ['.rar'],
+    'application/x-7z-compressed': ['.7z'],
+    'application/x-tar': ['.tar'],
+    'application/gzip': ['.gz'],
+    'text/html': ['.html', '.htm'],
+    'text/css': ['.css'],
+    'application/javascript': ['.js'],
+    'application/typescript': ['.ts'],
+    'text/x-java-source': ['.java'],
+    'text/x-c': ['.c'],
+    'text/x-c++': ['.cpp'],
+    'text/x-c-header': ['.h'],
+    'text/x-c++-header': ['.hpp'],
+    'text/x-go': ['.go'],
+    'text/x-rust': ['.rs'],
+    'text/x-ruby': ['.rb'],
+    'text/x-php': ['.php'],
+    'text/x-shellscript': ['.sh'],
+    'application/x-msdos-program': ['.bat'],
+    'application/x-powershell': ['.ps1'],
+    'application/sql': ['.sql'],
+    'application/x-yaml': ['.yaml', '.yml'],
+    'application/toml': ['.toml']
+}
+
 def calculate_file_hash(file_obj):
     """Calculate MD5 hash of a file"""
     md5_hash = hashlib.md5()
     for chunk in file_obj.chunks():
         md5_hash.update(chunk)
     return md5_hash.hexdigest()
+
+def get_mime_type_from_extension(extension):
+    """Get MIME type from file extension"""
+    for mime_type, extensions in KNOWN_FILE_TYPES.items():
+        if extension.lower() in [ext.lower() for ext in extensions]:
+            return mime_type
+    return 'application/octet-stream'
 
 # Create your views here.
 class FileViewSet(viewsets.ModelViewSet):
@@ -34,12 +85,16 @@ class FileViewSet(viewsets.ModelViewSet):
         file_type = request.query_params.get('file_type')
         logger.info(f"File type filter: {file_type}")
         if file_type:
+            if file_type == 'other':
+                # Filter out files with known MIME types
+                queryset = queryset.exclude(file_type__in=KNOWN_FILE_TYPES.keys())
             # Check if it's a MIME type (contains '/')
-            if '/' in file_type:
+            elif '/' in file_type:
                 queryset = queryset.filter(file_type=file_type)
             else:
                 # Filter by file extension
-                queryset = queryset.filter(original_filename__iendswith=file_type)
+                mime_type = get_mime_type_from_extension(f'.{file_type}')
+                queryset = queryset.filter(file_type=mime_type)
             
         min_size = request.query_params.get('min_size')
         if min_size:
@@ -97,118 +152,7 @@ class FileViewSet(viewsets.ModelViewSet):
             content_type = file_obj.content_type
             if not content_type or content_type == 'application/octet-stream':
                 ext = file_obj.name.split('.')[-1].lower()
-                content_type = {
-                    'py': 'text/x-python',
-                    'json': 'application/json',
-                    'csv': 'text/csv',
-                    'txt': 'text/plain',
-                    'md': 'text/markdown',
-                    'parquet': 'application/parquet',
-                    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    'xls': 'application/vnd.ms-excel',
-                    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'doc': 'application/msword',
-                    'ppt': 'application/vnd.ms-powerpoint',
-                    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    'zip': 'application/zip',
-                    'rar': 'application/x-rar-compressed',
-                    '7z': 'application/x-7z-compressed',
-                    'tar': 'application/x-tar',
-                    'gz': 'application/gzip',
-                    'xml': 'application/xml',
-                    'html': 'text/html',
-                    'css': 'text/css',
-                    'js': 'application/javascript',
-                    'ts': 'application/typescript',
-                    'java': 'text/x-java-source',
-                    'c': 'text/x-c',
-                    'cpp': 'text/x-c++',
-                    'h': 'text/x-c-header',
-                    'hpp': 'text/x-c++-header',
-                    'go': 'text/x-go',
-                    'rs': 'text/x-rust',
-                    'rb': 'text/x-ruby',
-                    'php': 'text/x-php',
-                    'sh': 'text/x-shellscript',
-                    'bat': 'application/x-msdos-program',
-                    'ps1': 'application/x-powershell',
-                    'sql': 'application/sql',
-                    'yaml': 'application/x-yaml',
-                    'yml': 'application/x-yaml',
-                    'toml': 'application/toml',
-                    'ini': 'text/plain',
-                    'conf': 'text/plain',
-                    'log': 'text/plain',
-                    'dat': 'application/octet-stream',
-                    'bin': 'application/octet-stream',
-                    'exe': 'application/x-msdownload',
-                    'dll': 'application/x-msdownload',
-                    'so': 'application/x-sharedlib',
-                    'dylib': 'application/x-mach-binary',
-                    'class': 'application/java-vm',
-                    'jar': 'application/java-archive',
-                    'war': 'application/java-archive',
-                    'ear': 'application/java-archive',
-                    'apk': 'application/vnd.android.package-archive',
-                    'ipa': 'application/x-itunes-ipa',
-                    'deb': 'application/x-debian-package',
-                    'rpm': 'application/x-rpm',
-                    'iso': 'application/x-iso9660-image',
-                    'img': 'application/octet-stream',
-                    'dmg': 'application/x-apple-diskimage',
-                    'vhd': 'application/x-vhd',
-                    'vhdx': 'application/x-vhdx',
-                    'ova': 'application/x-virtualbox-ova',
-                    'ovf': 'application/x-virtualbox-ovf',
-                    'vmdk': 'application/x-vmdk',
-                    'qcow2': 'application/x-qcow2',
-                    'raw': 'application/octet-stream',
-                    'vdi': 'application/x-virtualbox-vdi',
-                    'vbox': 'application/x-virtualbox-vbox',
-                    'vbox-extpack': 'application/x-virtualbox-extpack',
-                    'vbox-settings': 'application/x-virtualbox-settings',
-                    'vbox-prev': 'application/x-virtualbox-prev',
-                    'vbox-sav': 'application/x-virtualbox-sav',
-                    'vbox-tmp': 'application/x-virtualbox-tmp',
-                    'vbox-cid': 'application/x-virtualbox-cid',
-                    'vbox-evm': 'application/x-virtualbox-evm',
-                    'vbox-nvram': 'application/x-virtualbox-nvram',
-                    'vbox-ovf': 'application/x-virtualbox-ovf',
-                    'vbox-snap': 'application/x-virtualbox-snap',
-                    'vbox-vmdk': 'application/x-virtualbox-vmdk',
-                    'vbox-vhd': 'application/x-virtualbox-vhd',
-                    'vbox-vhdx': 'application/x-virtualbox-vhdx',
-                    'vbox-iso': 'application/x-virtualbox-iso',
-                    'vbox-floppy': 'application/x-virtualbox-floppy',
-                    'vbox-dvd': 'application/x-virtualbox-dvd',
-                    'vbox-hdd': 'application/x-virtualbox-hdd',
-                    'vbox-cdrom': 'application/x-virtualbox-cdrom',
-                    'vbox-fdd': 'application/x-virtualbox-fdd',
-                    'vbox-hd': 'application/x-virtualbox-hd',
-                    'vbox-cd': 'application/x-virtualbox-cd',
-                    'vbox-fd': 'application/x-virtualbox-fd',
-                    'vbox-h': 'application/x-virtualbox-h',
-                    'vbox-c': 'application/x-virtualbox-c',
-                    'vbox-f': 'application/x-virtualbox-f',
-                    'vbox-': 'application/x-virtualbox-',
-                    'vdi': 'application/x-virtualbox-vdi',
-                    'vmdk': 'application/x-virtualbox-vmdk',
-                    'vhd': 'application/x-virtualbox-vhd',
-                    'vhdx': 'application/x-virtualbox-vhdx',
-                    'iso': 'application/x-virtualbox-iso',
-                    'floppy': 'application/x-virtualbox-floppy',
-                    'dvd': 'application/x-virtualbox-dvd',
-                    'hdd': 'application/x-virtualbox-hdd',
-                    'cdrom': 'application/x-virtualbox-cdrom',
-                    'fdd': 'application/x-virtualbox-fdd',
-                    'hd': 'application/x-virtualbox-hd',
-                    'cd': 'application/x-virtualbox-cd',
-                    'fd': 'application/x-virtualbox-fd',
-                    'h': 'application/x-virtualbox-h',
-                    'c': 'application/x-virtualbox-c',
-                    'f': 'application/x-virtualbox-f',
-                    '-': 'application/x-virtualbox-',
-                }.get(ext, 'application/octet-stream')
+                content_type = get_mime_type_from_extension(f'.{ext}')
             
             data = {
                 'file': file_obj,
@@ -271,7 +215,8 @@ class FileViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(file_type=file_type)
             else:
                 # Filter by file extension
-                queryset = queryset.filter(original_filename__iendswith=file_type)
+                mime_type = get_mime_type_from_extension(f'.{file_type}')
+                queryset = queryset.filter(file_type=mime_type)
             
         min_size = request.query_params.get('min_size')
         if min_size:

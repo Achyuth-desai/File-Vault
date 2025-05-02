@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { KNOWN_FILE_TYPES } from '../config/fileTypes';
 
 interface FileFiltersProps {
   filters: {
@@ -95,47 +96,12 @@ export const FileFilters: React.FC<FileFiltersProps> = ({ filters, onFilterChang
             className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
           >
             <option value="">All Types</option>
-            <option value="application/pdf">PDF</option>
-            <option value="image/png">PNG Image</option>
-            <option value="image/jpeg">JPEG Image</option>
-            <option value="image/gif">GIF Image</option>
-            <option value="text/plain">Text File</option>
-            <option value="text/x-python">Python</option>
-            <option value="application/json">JSON</option>
-            <option value="text/csv">CSV</option>
-            <option value="text/markdown">Markdown</option>
-            <option value="application/parquet">Parquet</option>
-            <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">Excel (.xlsx)</option>
-            <option value="application/vnd.ms-excel">Excel (.xls)</option>
-            <option value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">Word (.docx)</option>
-            <option value="application/msword">Word (.doc)</option>
-            <option value="application/vnd.ms-powerpoint">PowerPoint (.ppt)</option>
-            <option value="application/vnd.openxmlformats-officedocument.presentationml.presentation">PowerPoint (.pptx)</option>
-            <option value="application/zip">ZIP Archive</option>
-            <option value="application/x-rar-compressed">RAR Archive</option>
-            <option value="application/x-7z-compressed">7-Zip Archive</option>
-            <option value="application/x-tar">TAR Archive</option>
-            <option value="application/gzip">GZIP Archive</option>
-            <option value="application/xml">XML</option>
-            <option value="text/html">HTML</option>
-            <option value="text/css">CSS</option>
-            <option value="application/javascript">JavaScript</option>
-            <option value="application/typescript">TypeScript</option>
-            <option value="text/x-java-source">Java</option>
-            <option value="text/x-c">C</option>
-            <option value="text/x-c++">C++</option>
-            <option value="text/x-c-header">C Header</option>
-            <option value="text/x-c++-header">C++ Header</option>
-            <option value="text/x-go">Go</option>
-            <option value="text/x-rust">Rust</option>
-            <option value="text/x-ruby">Ruby</option>
-            <option value="text/x-php">PHP</option>
-            <option value="text/x-shellscript">Shell Script</option>
-            <option value="application/x-msdos-program">Batch File</option>
-            <option value="application/x-powershell">PowerShell</option>
-            <option value="application/sql">SQL</option>
-            <option value="application/x-yaml">YAML</option>
-            <option value="application/toml">TOML</option>
+            {KNOWN_FILE_TYPES.map(type => (
+              <option key={type.mimeType} value={type.mimeType}>
+                {type.label}
+              </option>
+            ))}
+            <option value="other">Other Types</option>
           </select>
         </div>
 
