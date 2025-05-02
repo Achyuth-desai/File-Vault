@@ -6,12 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/core:/app/core
-      - ./backend/files:/app/files
-      - ./backend/manage.py:/app/manage.py
-      - ./backend/requirements.txt:/app/requirements.txt
-      - ./backend/start.sh:/app/start.sh
-      - ./backend/cleanup.sh:/app/cleanup.sh
+      - ./backend:/app
       - backend_media:/app/media
       - ./data:/app/data
     environment:
@@ -31,4 +26,5 @@ services:
       - backend
 
 volumes:
-  backend_media: 
+  backend_media:
+    driver: local 
