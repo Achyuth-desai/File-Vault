@@ -82,51 +82,61 @@ export const FileFilters: React.FC<FileFiltersProps> = ({ filters, onFilterChang
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 space-y-4 border border-gray-200">
+    <div className="bg-white/80 shadow-lg rounded-2xl p-8 space-y-6 border border-gray-200 backdrop-blur-sm">
       <div className="flex flex-wrap gap-6">
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="fileType" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="fileType" className="block text-sm font-semibold text-gray-700 mb-2">
             File Type
           </label>
-          <select
-            id="fileType"
-            name="fileType"
-            value={filters.fileType}
-            onChange={handleInputChange}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-          >
-            <option value="">All Types</option>
-            {KNOWN_FILE_TYPES.map(type => (
-              <option key={type.mimeType} value={type.mimeType}>
-                {type.label}
-              </option>
-            ))}
-            <option value="other">Other Types</option>
-          </select>
+          <div className="relative">
+            <select
+              id="fileType"
+              name="fileType"
+              value={filters.fileType}
+              onChange={handleInputChange}
+              className="block w-full rounded-xl border border-gray-300 bg-white py-2 px-4 pr-10 shadow focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:text-sm cursor-pointer transition-all appearance-none"
+            >
+              <option value="">All Types</option>
+              {KNOWN_FILE_TYPES.map(type => (
+                <option key={type.mimeType} value={type.mimeType}>
+                  {type.label}
+                </option>
+              ))}
+              <option value="other">Other Types</option>
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </span>
+          </div>
         </div>
 
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="sizeRange" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="sizeRange" className="block text-sm font-semibold text-gray-700 mb-2">
             File Size
           </label>
-          <select
-            id="sizeRange"
-            name="sizeRange"
-            value={getCurrentSizeRange()}
-            onChange={handleSizeRangeChange}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
-          >
-            <option value="">All Sizes</option>
-            {SIZE_RANGES.map(range => (
-              <option key={range.label} value={range.label}>
-                {range.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="sizeRange"
+              name="sizeRange"
+              value={getCurrentSizeRange()}
+              onChange={handleSizeRangeChange}
+              className="block w-full rounded-xl border border-gray-300 bg-white py-2 px-4 pr-10 shadow focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:text-sm cursor-pointer transition-all appearance-none"
+            >
+              <option value="">All Sizes</option>
+              {SIZE_RANGES.map(range => (
+                <option key={range.label} value={range.label}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </span>
+          </div>
         </div>
 
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="startDate" className="block text-sm font-semibold text-gray-700 mb-2">
             Start Date
           </label>
           <input
@@ -135,12 +145,12 @@ export const FileFilters: React.FC<FileFiltersProps> = ({ filters, onFilterChang
             name="startDate"
             value={filters.startDate}
             onChange={handleInputChange}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-xl border border-gray-300 bg-white py-2 px-4 shadow focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:text-sm cursor-pointer transition-all"
           />
         </div>
 
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700 mb-2">
             End Date
           </label>
           <input
@@ -149,7 +159,7 @@ export const FileFilters: React.FC<FileFiltersProps> = ({ filters, onFilterChang
             name="endDate"
             value={filters.endDate}
             onChange={handleInputChange}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-xl border border-gray-300 bg-white py-2 px-4 shadow focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:text-sm cursor-pointer transition-all"
           />
         </div>
       </div>
@@ -157,8 +167,9 @@ export const FileFilters: React.FC<FileFiltersProps> = ({ filters, onFilterChang
       <div className="flex justify-end">
         <button
           onClick={clearFilters}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-5 py-2 border border-blue-500 shadow-sm text-sm font-semibold rounded-xl text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 cursor-pointer transition-all"
         >
+          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           Clear Filters
         </button>
       </div>

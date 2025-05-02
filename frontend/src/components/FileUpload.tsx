@@ -24,8 +24,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       await refetch();
       setMessage({ 
         type: 'success', 
-        text: response.is_reference 
-          ? `File reference created successfully (original: ${response.original_file?.name})`
+        text: response.is_reference && response.original_file?.name
+          ? `File reference created successfully (original: ${response.original_file.name})`
           : 'File uploaded successfully' 
       });
       onUploadSuccess(response);
@@ -91,8 +91,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
     <div className="w-full max-w-md mx-auto">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}`}
+        className={`border-2 border-dashed border-green-200 shadow-lg rounded-lg p-8 text-center cursor-pointer transition-colors bg-white
+          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-green-200 hover:bg-gray-50'}`}
       >
         <input {...getInputProps()} />
         {isUploading ? (
@@ -106,7 +106,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
         )}
       </div>
       {message.text && (
-        <div className={`mt-4 p-4 rounded ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+        <div className={`mt-4 p-4 rounded ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
           {message.text}
         </div>
       )}

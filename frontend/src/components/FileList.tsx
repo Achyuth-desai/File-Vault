@@ -4,6 +4,7 @@ import { FileFilters } from './FileFilters';
 import { format } from 'date-fns';
 import { FileMetadata } from '../types/file';
 import { FileDetails } from './FileDetails';
+import FileTypeIcon from './icons/FileTypeIcon';
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
@@ -47,13 +48,13 @@ export const FileList: React.FC = () => {
   return (
     <div className="space-y-4">
       <FileFilters filters={filters} onFilterChange={setFilters} />
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-white shadow-lg border border-green-200 overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               Uploaded Files {files.length > 0 ? `(${files.length})` : ''}
             </h3>
-            <div className="relative">
+            <div className="relative z-10">
               <input
                 type="text"
                 placeholder="Search files..."
@@ -89,7 +90,9 @@ export const FileList: React.FC = () => {
               </li>
             ) : files.length === 0 ? (
               <li className="px-4 py-4 text-center text-gray-500">
-                No files uploaded yet
+                {searchQuery || filters.fileType || filters.minSize || filters.maxSize || filters.startDate || filters.endDate 
+                  ? "No items match your search criteria" 
+                  : "No files uploaded yet"}
               </li>
             ) : (
               files.map((file) => (
@@ -97,10 +100,7 @@ export const FileList: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <span className="text-gray-400">
-                          {file.file_type.startsWith('image/') ? '🖼️' : 
-                           file.file_type === 'application/pdf' ? '📄' : '📝'}
-                        </span>
+                        <FileTypeIcon mimeType={file.file_type} />
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
