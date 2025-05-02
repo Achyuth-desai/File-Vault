@@ -226,11 +226,13 @@ class FileViewSet(viewsets.ModelViewSet):
         # Build Elasticsearch query
         search = FileDocument.search()
         
-        # Add search query with prefix matching
+        # Add search query with multiple matching strategies
         search = search.query(
             Q('bool',
               should=[
                   Q('prefix', original_filename=query),
+                  Q('match_phrase', original_filename={'query': query, 'slop': 2}),
+                  Q('wildcard', original_filename={'value': f'*{query}*'}),
                   Q('match', original_filename={'query': query, 'fuzziness': 'AUTO'})
               ],
               minimum_should_match=1)
