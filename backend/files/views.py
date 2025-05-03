@@ -14,6 +14,22 @@ from .models import StoredFile
 
 logger = logging.getLogger('files')
 
+# Cache version key for search results
+SEARCH_CACHE_VERSION_KEY = 'file_search_cache_version'
+# Default version if not set
+DEFAULT_CACHE_VERSION = 1
+
+# Get current search cache version
+def get_search_cache_version():
+    version = cache.get(SEARCH_CACHE_VERSION_KEY, DEFAULT_CACHE_VERSION)
+    return version
+
+# Increment search cache version to invalidate all search caches
+def invalidate_search_cache():
+    version = get_search_cache_version()
+    cache.set(SEARCH_CACHE_VERSION_KEY, version + 1)
+    logger.info(f"Search cache invalidated. New version: {version + 1}")
+
 # List of known MIME types and their extensions
 KNOWN_FILE_TYPES = {
     'application/pdf': ['.pdf'],
@@ -186,6 +202,10 @@ class FileViewSet(viewsets.ModelViewSet):
         
         # Delete the database record (this will handle reference counting)
         self.perform_destroy(instance)
+        
+        # Invalidate all search caches by incrementing the version
+        invalidate_search_cache()
+        
         logger.info(f"File deleted successfully: {instance.original_filename}")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -203,11 +223,12 @@ class FileViewSet(viewsets.ModelViewSet):
         # Convert query to lowercase to ensure case-insensitive search
         query = query.lower()
 
-        # Generate cache key based on query and filters
+        # Generate cache key based on query, filters and cache version
         file_type = request.query_params.get('file_type', '')
         page = request.query_params.get('page', 1)
         page_size = request.query_params.get('page_size', self.pagination_class.page_size)
-        cache_key = f'search_{query}_{file_type}_{page}_{page_size}'
+        cache_version = get_search_cache_version()
+        cache_key = f'search_{query}_{file_type}_{page}_{page_size}_v{cache_version}'
         
         # Try to get cached results
         cached_results = cache.get(cache_key)
