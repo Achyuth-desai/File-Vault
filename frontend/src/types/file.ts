@@ -45,4 +45,14 @@ export interface ApiError {
     size: number;
     uploaded_at: string;
   };
+}
+
+export interface StorageStats {
+  total_files: number;
+  unique_files: number;
+  duplicate_files: number;
+  total_size: number;
+  actual_size: number;
+  space_saved: number;
+  percentage_saved: number;
 } 

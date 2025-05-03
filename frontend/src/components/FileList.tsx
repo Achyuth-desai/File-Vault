@@ -18,7 +18,11 @@ const formatDate = (date: string): string => {
   return format(new Date(date), 'MMM d, yyyy HH:mm');
 };
 
-export const FileList: React.FC = () => {
+interface FileListProps {
+  onDeleteFile?: (id: string) => Promise<void>;
+}
+
+export const FileList: React.FC<FileListProps> = ({ onDeleteFile }) => {
   const {
     files,
     isLoading,
@@ -39,6 +43,7 @@ export const FileList: React.FC = () => {
 
   const handleDelete = async (fileId: string) => {
     try {
+      // Always use the hook's delete function which has optimistic updates
       await deleteFile(fileId);
     } catch (error) {
       console.error('Failed to delete file:', error);

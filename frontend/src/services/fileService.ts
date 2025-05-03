@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FileMetadata, FileUploadResponse, FileListResponse, FileSearchResponse, ApiError } from '../types/file';
+import { FileMetadata, FileUploadResponse, FileListResponse, FileSearchResponse, ApiError, StorageStats } from '../types/file';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
@@ -94,6 +94,15 @@ export const fileService = {
       const paramsObj = params ? Object.fromEntries(params.entries()) : undefined;
       console.log('Search params object:', paramsObj);
       const response = await api.get(url, { params: paramsObj });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getStorageStats: async (): Promise<StorageStats> => {
+    try {
+      const response = await api.get('/files/storage_stats/');
       return response.data;
     } catch (error) {
       throw handleApiError(error);

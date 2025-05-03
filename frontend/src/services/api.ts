@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FileMetadata, FileUploadResponse, FileListResponse, FileSearchResponse } from '../types/file';
+import { FileMetadata, FileUploadResponse, FileListResponse, FileSearchResponse, StorageStats } from '../types/file';
 import { fileService } from './fileService';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
@@ -60,4 +60,8 @@ export const searchFiles = async (query: string, params?: URLSearchParams): Prom
   searchParams.append('q', query);
   const url = '/files/search/';
   return fileService.searchFiles(url, searchParams);
+};
+
+export const getStorageStats = async (): Promise<StorageStats> => {
+  return fileService.getStorageStats();
 }; 

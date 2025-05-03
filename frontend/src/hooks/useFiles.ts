@@ -89,6 +89,9 @@ export const useFiles = () => {
         exact: true
       });
       
+      // Invalidate storage stats
+      await queryClient.invalidateQueries({ queryKey: ['storageStats'] });
+      
       // Force a refetch with current filters
       await refetch();
     },
@@ -125,6 +128,9 @@ export const useFiles = () => {
     onSuccess: () => {
       // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['files', 'list'] });
+      
+      // Invalidate storage stats
+      queryClient.invalidateQueries({ queryKey: ['storageStats'] });
     },
   });
 
@@ -138,6 +144,8 @@ export const useFiles = () => {
       if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
         // Invalidate queries to refresh the list
         queryClient.invalidateQueries({ queryKey: ['files', 'list'] });
+        // Also invalidate storage stats
+        queryClient.invalidateQueries({ queryKey: ['storageStats'] });
       }
     }
   };

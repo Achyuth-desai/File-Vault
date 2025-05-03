@@ -26,9 +26,9 @@ export const FileDetails: React.FC<FileDetailsProps> = ({ file, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-        <div className="px-4 py-5 sm:px-6">
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 my-8 max-h-[80vh] overflow-y-auto">
+        <div className="px-4 py-4 sm:px-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               File Details
@@ -38,17 +38,17 @@ export const FileDetails: React.FC<FileDetailsProps> = ({ file, onClose }) => {
               className="text-gray-400 hover:text-gray-500"
             >
               <span className="sr-only">Close</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+        <div className="border-t border-gray-200 px-4 py-4 sm:px-6">
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Filename</dt>
-              <dd className="mt-1 text-sm text-gray-900">{file.original_filename}</dd>
+              <dd className="mt-1 text-sm text-gray-900 break-words">{file.original_filename}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">File Type</dt>
@@ -64,9 +64,9 @@ export const FileDetails: React.FC<FileDetailsProps> = ({ file, onClose }) => {
                 {format(new Date(file.uploaded_at), 'PPpp')}
               </dd>
             </div>
-            <div className="sm:col-span-1">
+            <div className="sm:col-span-2">
               <dt className="text-sm font-medium text-gray-500">File Hash</dt>
-              <dd className="mt-1 text-sm text-gray-900 font-mono">{file.file_hash}</dd>
+              <dd className="mt-1 text-sm text-gray-900 font-mono text-xs break-all">{file.file_hash}</dd>
             </div>
             {file.is_reference && (
               <div className="sm:col-span-2">
@@ -88,7 +88,7 @@ export const FileDetails: React.FC<FileDetailsProps> = ({ file, onClose }) => {
             )}
           </dl>
         </div>
-        <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <div className="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
           <button
             type="button"
             onClick={handleDownload}

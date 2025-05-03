@@ -11,6 +11,7 @@ from .serializers import FileSerializer
 import hashlib
 import logging
 from .models import StoredFile
+from django.db import models
 
 logger = logging.getLogger('files')
 
@@ -298,3 +299,55 @@ class FileViewSet(viewsets.ModelViewSet):
         cache.set(cache_key, response_data, timeout=300)
         
         return Response(response_data)
+
+    @action(detail=False, methods=['get'])
+    def storage_stats(self, request):
+        """
+        Provides statistics about file storage efficiency including:
+        - Total number of files
+        - Number of unique files
+        - Number of duplicate references
+        - Total space used (if all files were stored individually)
+        - Actual space used (with deduplication)
+        - Space saved through deduplication
+        """
+        # Get total file count
+        total_files = File.objects.count()
+        
+        # Get unique file count (StoredFile entries)
+        unique_files = StoredFile.objects.count()
+        
+        # Calculate duplicate references
+        duplicate_files = total_files - unique_files
+        
+        # Calculate total size if all files were stored individually
+        total_size = File.objects.aggregate(total=models.Sum('size'))['total'] or 0
+        
+        # Calculate actual storage used (sum of unique StoredFile sizes)
+        # We join to get the size from File model since that's where size is stored
+        stored_files = StoredFile.objects.all()
+        actual_size = 0
+        for stored_file in stored_files:
+            # Get the size from any file reference (they all have the same size)
+            file_ref = File.objects.filter(stored_file=stored_file).first()
+            if file_ref:
+                actual_size += file_ref.size
+        
+        # Calculate space saved
+        space_saved = total_size - actual_size
+        
+        # Calculate percentage saved
+        percentage_saved = (space_saved / total_size * 100) if total_size > 0 else 0
+        
+        stats = {
+            'total_files': total_files,
+            'unique_files': unique_files,
+            'duplicate_files': duplicate_files,
+            'total_size': total_size,  # Size if all files were stored individually
+            'actual_size': actual_size,  # Actual storage used
+            'space_saved': space_saved,  # Bytes saved
+            'percentage_saved': round(percentage_saved, 2),  # Percentage saved
+        }
+        
+        logger.info(f"Storage statistics: {stats}")
+        return Response(stats)
