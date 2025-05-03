@@ -33,8 +33,21 @@ Before you begin, ensure you have installed:
 
 ### Using Docker (Recommended)
 
+For older Docker versions (pre-20.10.x):
 ```bash
 docker-compose up --build
+```
+
+For newer Docker versions (20.10.x+):
+```bash
+docker compose up --build
+```
+
+On Windows PowerShell, you may need:
+```powershell
+docker-compose up --build
+# or for newer versions
+docker compose up --build
 ```
 
 ### Local Development Setup
