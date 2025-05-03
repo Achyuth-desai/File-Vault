@@ -20,6 +20,9 @@ class FileDocument(Document):
     class Django:
         model = File
 
+    def prepare_original_filename(self, instance):
+        return instance.original_filename.lower()
+
     def prepare_size(self, instance):
         return instance.stored_file.file.size
 

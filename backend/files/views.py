@@ -200,6 +200,9 @@ class FileViewSet(viewsets.ModelViewSet):
                 'error': 'Search query parameter "q" is required'
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Convert query to lowercase to ensure case-insensitive search
+        query = query.lower()
+
         # Generate cache key based on query and filters
         file_type = request.query_params.get('file_type', '')
         page = request.query_params.get('page', 1)

@@ -15,6 +15,11 @@ services:
       - ELASTICSEARCH_DSN=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+    command: >
+      bash -c "
+        chmod +x /app/*.sh &&
+        ./start.sh
+      "
 
   frontend:
     build: ./frontend
