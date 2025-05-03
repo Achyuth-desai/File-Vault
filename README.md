@@ -118,25 +118,50 @@ docker-compose up --build
 #### Download File
 - Access file directly through the file URL provided in metadata
 
+#### Storage Statistics
+- **GET** `/api/files/storage_stats/`
+- Provides statistics about file storage efficiency
+- Returns: Storage metrics including total files, unique files, duplicates, total space, actual space used, and space saved
+
 ## 🗄️ Project Structure
 
 ```
 file-hub/
 ├── backend/                # Django backend
 │   ├── files/             # Main application
-│   │   ├── models.py      # Data models
-│   │   ├── views.py       # API views
+│   │   ├── documents.py   # Elasticsearch document mappings
+│   │   ├── models.py      # Data models (includes StoredFile model for deduplication)
+│   │   ├── views.py       # API views (includes search and storage_stats endpoints)
+│   │   ├── signals.py     # Signal handlers for Elasticsearch indexing
 │   │   ├── urls.py        # URL routing
-│   │   └── serializers.py # Data serialization
+│   │   └── serializers.py # Data serialization (includes StoredFileSerializer)
 │   ├── core/              # Project settings
+│   │   └── settings.py    # Includes Elasticsearch configuration
+│   ├── start.sh           # Server startup script with Elasticsearch setup
 │   └── requirements.txt   # Python dependencies
 ├── frontend/              # React frontend
 │   ├── src/
 │   │   ├── components/    # React components
+│   │   │   ├── FileFilters.tsx       # Advanced file filtering component
+│   │   │   ├── FileList.tsx          # Main file listing with search
+│   │   │   ├── FileDetails.tsx       # File details modal
+│   │   │   ├── FileUpload.tsx        # Drag-and-drop file upload
+│   │   │   ├── StorageStatsCard.tsx  # Storage efficiency visualization
+│   │   │   └── icons/                # Icon components
+│   │   │       ├── FileTypeIcon.tsx  # File type-specific icons
+│   │   │       └── FileVaultIcon.tsx # Application branding icons
+│   │   ├── hooks/         # Custom React hooks
+│   │   │   ├── useFiles.ts           # Files data and operations hook
+│   │   │   └── useStorageStats.ts    # Hook for storage efficiency data
 │   │   ├── services/      # API services
+│   │   │   ├── api.ts     # API functions including search and storage stats
+│   │   │   └── fileService.ts # File operations implementation
+│   │   ├── config/        # Frontend configuration
+│   │   │   └── fileTypes.ts # File type definitions
 │   │   └── types/         # TypeScript types
+│   │       └── file.ts    # Includes StorageStats and FileSearch interfaces
 │   └── package.json      # Node.js dependencies
-└── docker-compose.yml    # Docker composition
+└── docker-compose.yml    # Docker composition (includes Elasticsearch service)
 ```
 
 ## 🔧 Development Features
@@ -166,6 +191,27 @@ file-hub/
    rm backend/data/db.sqlite3
    python manage.py migrate
    ```
+
+4. **MacOS Docker Issues**
+   If you encounter the following error on MacOS when building with docker-compose:
+   ```
+   E: Problem executing scripts APT::Update::Post-Invoke 'rm -f /var/cache/apt/archives/.deb /var/cache/apt/archives/partial/.deb /var/cache/apt/*.bin || true'
+   ```
+   
+   Try these solutions:
+   - Update your Docker Desktop to the latest version
+   - Increase Docker resources (Memory/CPU) in Docker Desktop preferences
+   - Modify the backend Dockerfile to break up the apt commands:
+     ```dockerfile
+     RUN apt-get update
+     RUN apt-get install -y --no-install-recommends build-essential curl
+     RUN rm -rf /var/lib/apt/lists/*
+     ```
+   - Reset Docker's cache:
+     ```bash
+     docker system prune -a
+     docker volume prune
+     ```
 
 # Project Submission Instructions
 

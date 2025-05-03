@@ -41,7 +41,11 @@ export const StorageStatsCard: React.FC = () => {
           <span className="text-sm text-gray-500">Duplicate Files</span>
         </div>
         <div className="text-center">
-          <span className="block text-3xl font-bold text-indigo-600">{stats.percentage_saved.toFixed(1)}%</span>
+          <span className="block text-3xl font-bold text-indigo-600">
+            {stats.percentage_saved === 0 ? '0' : 
+             stats.percentage_saved > 0 && stats.percentage_saved < 0.1 ? '< 0.1' : 
+             stats.percentage_saved.toFixed(1)}%
+          </span>
           <span className="text-sm text-gray-500">Space Saved</span>
         </div>
       </div>
