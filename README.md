@@ -226,7 +226,7 @@ file-hub/
      docker volume prune
      ```
 
-# Project Submission Instructions
+<!-- # Project Submission Instructions
 
 ## Preparing Your Submission
 
@@ -281,7 +281,7 @@ file-hub/
    - Your video documentation
    - Any additional notes or comments about your implementation
 
-Make sure to test the zip file and video before submitting to ensure they are complete and working as expected.
+Make sure to test the zip file and video before submitting to ensure they are complete and working as expected. -->
 
 # Docker Installation Instructions
 
